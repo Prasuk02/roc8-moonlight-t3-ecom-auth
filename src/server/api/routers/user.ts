@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { ValidateVerificationCode, encryptPassword, encryptVerificationCode } from "../utils/encryption";
+import { ValidatePassword, ValidateVerificationCode, encryptPassword, encryptVerificationCode } from "../utils/encryption";
 import { cookies } from "next/headers";
 import { ApiResponse } from "../utils/apiResponse";
 import { Resend } from "resend";
@@ -9,7 +9,6 @@ import { env } from "~/env";
 import React from "react";
 import VerifyEmailTemplate from "../email-templates/VerifyEmail";
 import randomize from 'randomatic'
-import { redirect } from "next/navigation";
 import { isVerificationCodeValid } from "../utils/validate";
 import { generateJwtToken } from "../helpers/jwtToken";
 
@@ -151,8 +150,6 @@ export const userRouter = createTRPCRouter({
       const isEmailCodeValidated = ValidateVerificationCode(code, verificationCode.code);
 
       if (!isCodeValid || !isEmailCodeValidated) {
-        console.log(isCodeValid)
-        console.log(isEmailCodeValidated)
         throw new TRPCError({ message: "Invalid Code. Please refer your registered mail to proceed.", code: "BAD_REQUEST" });
       }
 
@@ -173,5 +170,44 @@ export const userRouter = createTRPCRouter({
         message: "Email verified successfully!",
         statusCode: 200
       })
-    })
+    }),
+
+  // Endpoint to login registered users and generate JWT token
+  login: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        password: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { email, password } = input;
+
+      if ( !email || !password ) {
+        throw new TRPCError({ message: "Please ensure all fields are filled out!", code: "BAD_REQUEST" })
+      }
+
+      const user = await ctx.db.user.findFirst({ where: { email } })
+
+      if (!user) {
+        throw new TRPCError({ message: "Incorrect Email Id or Password", code: "BAD_REQUEST" })
+      }
+
+      if (!ValidatePassword(password, user.password)) {
+        throw new TRPCError({ message: "Incorrect Email Id or Password", code: "BAD_REQUEST" })
+      }
+
+      cookies().set('uuid', user.id)
+
+      if (user.isVerified) {
+        const token = generateJwtToken(user.id);
+        cookies().set('token', token);
+      }
+
+      return new ApiResponse({
+        data: user,
+        message: "Login successful! Welcome to moonshot ecommerce webapp.",
+        statusCode: 200
+      });
+  }),
 });
