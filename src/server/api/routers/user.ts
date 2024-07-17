@@ -1,11 +1,20 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { encryptPassword } from "../utils/encryption";
+import { ValidateVerificationCode, encryptPassword, encryptVerificationCode } from "../utils/encryption";
 import { cookies } from "next/headers";
 import { ApiResponse } from "../utils/apiResponse";
+import { Resend } from "resend";
+import { env } from "~/env";
+import React from "react";
+import VerifyEmailTemplate from "../email-templates/VerifyEmail";
+import randomize from 'randomatic'
+import { redirect } from "next/navigation";
+import { isVerificationCodeValid } from "../utils/validate";
+import { generateJwtToken } from "../helpers/jwtToken";
 
 export const userRouter = createTRPCRouter({
+  // Endpoint to register new user
   create: publicProcedure
     .input(
       z.object({
@@ -52,4 +61,117 @@ export const userRouter = createTRPCRouter({
       });
     }),
 
+  // Endpoint to send verification code to user registered email
+  sendVerificationCode: publicProcedure
+    .mutation(async ({ ctx }) => {
+      const userId = cookies().get('uuid')?.value;
+      if (!userId) {
+        throw new TRPCError({ message: "Unable to identify user. Please try to login / signup again.", code: "BAD_REQUEST" })
+      }
+
+      const user = await ctx.db.user.findFirst({ where: { id: userId } });
+      if ( !user ) {
+        throw new TRPCError({ message: "User Invalid. Please try to login / signup again.", code: "BAD_REQUEST" })
+      }
+
+      const verificationCode = await ctx.db.verificationCode.findFirst({ where: { userId } })
+      const isCodeValid = verificationCode && isVerificationCodeValid(verificationCode);
+      if (isCodeValid) {
+        return new ApiResponse({
+          data: null,
+          message: "A verification code has already been sent to your registered email. Please check your inbox to proceed.",
+          statusCode: 200
+        })
+      } 
+      else if (verificationCode) {
+        await ctx.db.verificationCode.delete({ 
+          where: {
+            id: verificationCode?.id,
+            userId: verificationCode?.userId
+          } 
+        });
+      }
+
+      const newVerificationCode = randomize('0', 8);
+
+      const resend = new Resend(env.RESEND_API_KEY);
+      const { data, error } = await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: ['prasukj02@gmail.com'],
+        subject: 'Verification Code for moonshot Ecommerce Account',
+        react: VerifyEmailTemplate({ name: "Prasuk Jain", code: newVerificationCode }) as React.ReactElement,
+      })
+
+      if (error) {
+        throw new TRPCError({ message: error.message, code: "INTERNAL_SERVER_ERROR" })
+      }
+
+      await ctx.db.verificationCode.create({
+        data: {
+          code: encryptVerificationCode(newVerificationCode),
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+          userId
+        }
+      })
+
+      return new ApiResponse({
+        data: data,
+        message: "A verification code has been successfully sent to your registered email address. Please check your inbox to proceed.",
+        statusCode: 200
+      })
+    }),
+
+  // Endpoint for email verification using the code sent to the user's registered email address
+  verifyRegisteredEmail: publicProcedure
+    .input(
+      z.object({
+        code: z
+          .string()
+          .length(8)
+      })
+    )
+    .mutation( async ({ ctx, input }) => {
+      const { code } = input;
+      const userId = cookies().get('uuid')?.value;
+      if (!userId) {
+        throw new TRPCError({ message: "Unable to identify user. Please try to login / signup again.", code: "BAD_REQUEST" })
+      }
+
+      const user = await ctx.db.user.findFirst({ where: { id: userId } });
+      if ( !user ) {
+        throw new TRPCError({ message: "User Invalid. Please try to login / signup again.", code: "BAD_REQUEST" })
+      }
+      
+      const verificationCode = await ctx.db.verificationCode.findFirst({ where: { userId } });
+      if (!verificationCode || !code) {
+        throw new TRPCError({ message: "Went something wrong! Please try after sometime", code: "INTERNAL_SERVER_ERROR" })
+      }
+
+      const isCodeValid = isVerificationCodeValid(verificationCode);
+      const isEmailCodeValidated = ValidateVerificationCode(code, verificationCode.code);
+
+      if (!isCodeValid || !isEmailCodeValidated) {
+        console.log(isCodeValid)
+        console.log(isEmailCodeValidated)
+        throw new TRPCError({ message: "Invalid Code. Please refer your registered mail to proceed.", code: "BAD_REQUEST" });
+      }
+
+      await ctx.db.user.update({
+        where: {
+          id: userId
+        },
+        data: {
+          isVerified: true
+        }
+      })
+
+      const token = generateJwtToken(userId);
+      cookies().set('token', token);
+
+      return new ApiResponse({
+        data: null,
+        message: "Email verified successfully!",
+        statusCode: 200
+      })
+    })
 });

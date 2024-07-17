@@ -33,9 +33,7 @@ const CodeInput = ({ length, getInputVerificationCode }: CodeInputProps ) => {
       inputRef.current[index + 1].focus();
     }
 
-    if (combinedCode.length === length) {
-      getInputVerificationCode(combinedCode);
-    }
+    getInputVerificationCode(combinedCode);
   };
 
   const handleKeyEvent = (index: number, e: KeyboardEvent) => {
