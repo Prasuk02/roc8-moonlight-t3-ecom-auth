@@ -2,19 +2,44 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model User {
+  id                   String              @id @unique @default(uuid())
+  name                 String
+  email                String              @unique
+  password             String
+  isVerified           Boolean             @default(false)
+  interestedCategory   InterestedCategory? @relation(fields: [interestedCategoryId], references: [id])
+  interestedCategoryId String?             @unique
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
-    @@index([name])
+  @@index([email])
+}
+
+model Category {
+  id                   String              @id @unique @default(uuid())
+  name                 String              @unique
+  interestedCategory   InterestedCategory? @relation(fields: [interestedCategoryId], references: [id])
+  interestedCategoryId String?
+}
+
+model InterestedCategory {
+  id         String     @id @unique @default(uuid())
+  categories Category[]
+  user       User?
+}
+
+model VerificationCode {
+  id        String   @id @unique @default(uuid())
+  code      String
+  expiresAt DateTime @db.Timestamptz(3)
+  userId    String
 }
