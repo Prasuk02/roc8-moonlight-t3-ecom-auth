@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
-import { verifyJwtToken } from './server/api/helpers/jwtToken';
+import axios from 'axios';
  
 // This function can be marked `async` if using `await` inside
 export async function middleware (request: NextRequest) {
@@ -27,6 +27,17 @@ export async function middleware (request: NextRequest) {
     return NextResponse.next();
   }
 
+}
+
+const verifyJwtToken = async (token: string) => {
+  try { 
+    const { data } = await axios.post('http://localhost:3000/api/auth/verifyToken', { token });
+    return data;
+  } catch (error) {
+    return {
+      success: false
+    }
+  }
 }
  
 // See "Matching Paths" below to learn more

@@ -1,8 +1,8 @@
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, privateProcedure } from "~/server/api/trpc";
 import { ApiResponse } from "../utils/apiResponse";
 
 export const categoryRouter = createTRPCRouter({
-  fetchAllCategories: publicProcedure
+  fetchAllCategories: privateProcedure()
     .query( async ({ ctx }) => {
       const categories = await ctx.db.category.findMany()
       return new ApiResponse({

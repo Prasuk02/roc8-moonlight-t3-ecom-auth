@@ -1,11 +1,6 @@
 import jwt from "jsonwebtoken";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
-import * as jose from 'jose'
-
-const jwtConfig = {
-  secret: new TextEncoder().encode(env.JWT_SECRET),
-}
 
 export const generateJwtToken = (userId: string) => {
   try {
@@ -32,16 +27,20 @@ export const verifyJwtToken = async (token: string) => {
     if (!token) {
       throw new TRPCError({ message: "Token not found", code: "BAD_REQUEST" })
     }
-    const tokenData = await jose.jwtVerify(token, jwtConfig.secret)
+    const verifiedTokenData = jwt.verify(token, env.JWT_SECRET);
     return {
-      data: tokenData.payload,
+      data: verifiedTokenData as {
+        userId: string,
+        iat: number,
+        exp: number
+      },
       message: 'Valid token',
       success: true
     }
   } catch (error: unknown) {
-    const jwtError = error as TRPCError;
     return {
-      message: jwtError.message,
+      error,
+      message: "Invalid Token",
       success: false
     }
   }
