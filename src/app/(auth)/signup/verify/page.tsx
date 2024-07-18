@@ -34,7 +34,12 @@ const page = () => {
 
   useEffect(() => {
     setSendCode(true);
-    setUserEmail(searchParams.get('email') || '');
+
+    const userEmail = searchParams.get('email') || '';
+    if (!userEmail) {
+      router.push('/signup')
+    }
+    setUserEmail(userEmail);
   }, [])
 
   useEffect(() => {
