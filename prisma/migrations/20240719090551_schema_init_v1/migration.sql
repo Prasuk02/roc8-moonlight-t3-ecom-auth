@@ -16,7 +16,6 @@ CREATE TABLE "User" (
 CREATE TABLE "Category" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "interestedCategoryId" TEXT,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -24,6 +23,8 @@ CREATE TABLE "Category" (
 -- CreateTable
 CREATE TABLE "InterestedCategory" (
     "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "categoryIds" TEXT[],
 
     CONSTRAINT "InterestedCategory_pkey" PRIMARY KEY ("id")
 );
@@ -45,9 +46,6 @@ CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_interestedCategoryId_key" ON "User"("interestedCategoryId");
-
--- CreateIndex
 CREATE INDEX "User_email_idx" ON "User"("email");
 
 -- CreateIndex
@@ -60,10 +58,10 @@ CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 CREATE UNIQUE INDEX "InterestedCategory_id_key" ON "InterestedCategory"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "InterestedCategory_userId_key" ON "InterestedCategory"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "VerificationCode_id_key" ON "VerificationCode"("id");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_interestedCategoryId_fkey" FOREIGN KEY ("interestedCategoryId") REFERENCES "InterestedCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_interestedCategoryId_fkey" FOREIGN KEY ("interestedCategoryId") REFERENCES "InterestedCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "InterestedCategory" ADD CONSTRAINT "InterestedCategory_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
