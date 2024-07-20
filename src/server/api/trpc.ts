@@ -11,6 +11,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "~/server/db";
+import { isAuthed } from "./middlewares/isAuthed";
 
 /**
  * 1. CONTEXT
@@ -24,7 +25,7 @@ import { db } from "~/server/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async (opts: { headers: Headers, authToken?: { [key: string]: string } }) => {
   return {
     db,
     ...opts,
@@ -38,7 +39,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+export const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
@@ -81,3 +82,13 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+
+/**
+ * Private (authenticated) procedure
+ *
+ * This is the base piece you use to build new queries and mutations on your tRPC API.
+ * It guarantee that a user querying is authorized
+ * Acts as a gatekeeper for protected procedures, enforcing authentication and authorization.
+ */
+export const privateProcedure = () =>
+  t.procedure.use(isAuthed());

@@ -1,9 +1,13 @@
 import "~/styles/globals.css";
 
-import { GeistSans } from "geist/font/sans";
+import { Inter } from "next/font/google";
 import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import Navbar from "./_components/Navbar";
+import PromoBar from "./_components/PromoBar";
+
+const font = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -15,9 +19,17 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+    <html lang="en" className={font.className}>
+      <body className='flex flex-col h-dvh'>
+
+        {/* Navbar & PromoBar */}
+        <Navbar/>
+        <PromoBar/>
+
+        {/* Children */}
+        <div className='flex-grow'>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </div>
       </body>
     </html>
   );
