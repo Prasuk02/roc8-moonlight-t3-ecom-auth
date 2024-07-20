@@ -73,7 +73,7 @@ const page = () => {
 
           <hr className='mt-5 border-t-[1px] border-[#c1c1c1]'/>
 
-          <p className='mt-5 text-center text-sm'>Don't have an Account? <strong className='pl-1'>SIGN UP</strong></p>
+          <p className='mt-5 text-center text-sm'>Don&apos;t have an Account? <strong className='pl-1'>SIGN UP</strong></p>
         </div>
       </main>
     </>

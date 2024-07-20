@@ -18,7 +18,8 @@ export const generateJwtToken = (userId: string) => {
     return jwtToken;
   }
   catch (error) {
-    throw new TRPCError({ message: error.message || "Not able to generate JWT token", code: 'INTERNAL_SERVER_ERROR' })
+    // @ts-ignore
+    throw new TRPCError({ message: error.message || "Not able to generate JWT token", code: 'INTERNAL_SERVER_ERROR' }) 
   }
 };
 
