@@ -13,6 +13,7 @@ export const env = createEnv({
       .default("development"),
     JWT_SECRET: z.string().min(20),
     RESEND_API_KEY: z.string().min(20),
+    API_BASE_URL: z.string(),
   },
 
   /**
@@ -32,7 +33,8 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     JWT_SECRET: process.env.JWT_SECRET,
-    RESEND_API_KEY: process.env.RESEND_API_KEY
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    API_BASE_URL: process.env.API_BASE_URL
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
