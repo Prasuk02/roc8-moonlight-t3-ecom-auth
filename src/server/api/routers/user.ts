@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, privateProcedure, publicProcedure } from "~/server/api/trpc";
 import { ValidatePassword, ValidateVerificationCode, encryptPassword, encryptVerificationCode } from "../utils/encryption";
 import { cookies } from "next/headers";
 import { ApiResponse } from "../utils/apiResponse";
@@ -209,5 +209,37 @@ export const userRouter = createTRPCRouter({
         message: "Login successful! Welcome to moonshot ecommerce webapp.",
         statusCode: 200
       });
+  }),
+
+  getUser: privateProcedure()
+    .query(async({ ctx }) => {
+      const user = await ctx.db.user.findFirst({ where: { id: ctx.userId } });
+
+      if (!user) {
+        throw new TRPCError({ message: "User Not Authenticated", code: "BAD_REQUEST" })
+      }
+
+      return new ApiResponse({
+        data:user,
+        message: "User details fetched successfully",
+        statusCode: 200
+      });
+  }),
+
+  logout: privateProcedure()
+    .mutation(async () => {
+      const authToken = cookies().get("token");
+
+      if (!authToken) {
+        throw new TRPCError({
+          message: "Invalid Request",
+          code: "BAD_REQUEST",
+        });
+      }
+
+      cookies().delete("token");
+      cookies().delete("uuid");
+
+      return;
   }),
 });

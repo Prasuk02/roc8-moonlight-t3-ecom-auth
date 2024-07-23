@@ -2,6 +2,11 @@ import { createTRPCRouter, privateProcedure } from "~/server/api/trpc";
 import { ApiResponse } from "../utils/apiResponse";
 
 export const categoryRouter = createTRPCRouter({
+  /**
+   * @access Valid user token
+   * @description Endpoint to fetch all the categories and
+   *              Fetch current user interested categories
+   */
   fetchAllCategories: privateProcedure()
     .query( async ({ ctx }) => {
       const { userId } = ctx;

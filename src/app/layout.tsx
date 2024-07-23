@@ -21,15 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={font.className}>
       <body className='flex flex-col h-dvh'>
+        <TRPCReactProvider>
+          {/* Navbar & PromoBar */}
+          <Navbar/>
+          <PromoBar/>
 
-        {/* Navbar & PromoBar */}
-        <Navbar/>
-        <PromoBar/>
-
-        {/* Children */}
-        <div className='flex-grow'>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
-        </div>
+          {/* Children */}
+          <div className='flex-grow'>
+            {children}
+          </div>
+        </TRPCReactProvider>
       </body>
     </html>
   );
