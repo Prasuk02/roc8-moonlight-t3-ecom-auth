@@ -96,7 +96,7 @@ export const userRouter = createTRPCRouter({
       const resend = new Resend(env.RESEND_API_KEY);
       const { data, error } = await resend.emails.send({
         from: env.SENDER_EMAIL,
-        to: ['prasukj02@gmail.com'],
+        to: [ user.email ],
         subject: 'Verification Code for moonshot Ecommerce Account',
         react: VerifyEmailTemplate({ name: "Prasuk Jain", code: newVerificationCode }) as React.ReactElement,
       })
