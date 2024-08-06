@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { api } from '~/trpc/react'
 import { Toaster, toast } from 'sonner';
+import Link from "next/link";
 
 const page = () => {
   const router = useRouter()
@@ -75,7 +76,11 @@ const page = () => {
           </div>
           
           <button type='submit' onClick={ createNewUser } className='mt-8 text-center text-white bg-black rounded-lg text-sm w-full h-11 uppercase'>Create Account</button>
-          <p className='mt-7 text-center text-sm'>Have an Account? <strong className='pl-1'>LOGIN</strong></p>
+          <p className='mt-7 text-center text-sm'>Have an Account? 
+            <strong className='pl-1'>
+              <Link href='login' className="text-[#222222] uppercase">LOGIN</Link>
+            </strong>
+          </p>
         </div>
       </main>
     </>

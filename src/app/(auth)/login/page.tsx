@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { api } from '~/trpc/react';
 import { useRouter } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
+import Link from "next/link";
 
 const page = () => {
   const router = useRouter();
@@ -73,7 +74,10 @@ const page = () => {
 
           <hr className='mt-5 border-t-[1px] border-[#c1c1c1]'/>
 
-          <p className='mt-5 text-center text-sm'>Don&apos;t have an Account? <strong className='pl-1'>SIGN UP</strong></p>
+          <p className='mt-5 text-center text-sm'>Don&apos;t have an Account? 
+            <strong className='pl-1'>
+              <Link href='signup' className="text-[#222222] uppercase">Sign up</Link>
+            </strong></p>
         </div>
       </main>
     </>
